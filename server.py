@@ -22,9 +22,9 @@
 
 
 import flask
-from flask import Flask, request
+from flask import Flask, request, redirect
 import json
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 app.debug = True
 
 # An example world
@@ -71,10 +71,11 @@ def flask_post_json():
     else:
         return json.loads(request.form.keys()[0])
 
+
 @app.route("/")
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    return redirect('/static/index.html')
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
