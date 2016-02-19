@@ -1,3 +1,5 @@
+(function () {
+
 var canvas = document.getElementById('c'),
     host = window.location.host,
     context = canvas.getContext("2d"),
@@ -6,19 +8,16 @@ var canvas = document.getElementById('c'),
     world = {},
     drawNext = true,
     counter = 0,
-    url = "http://localhost:5000";
+    host = "http://localhost:5000";
 
 
-function sendJSONXMLHTTPRequest(url, objects, callback) {
+function postJSON(url, objects, callback) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState==4) {
             try {
                 if (xhr.status==200) {
-                    //XXX: parse some JSON from the request!
-                    //XXX: Pass the data to the callback!
-                    var data = JSON.parse(xhr.responseText);
-                    callback(null, data);
+                    callback(null, JSON.parse(xhr.responseText));
                 }
             } 
             catch(e) {
@@ -27,31 +26,22 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
             }
         }
     };
-    //XXX: POST to a URL
-    //XXX: set the mimetype and the accept headers!
-    // Remember to use application/json !
-    xhr.setRequestHeader("X-HTTP-Method-Override", method);
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.send(JSON.stringify(objects));
+}
+
+function requestJSON(url, callback) {
+    var xhr = new XMLHttpRequest();
+
+    xhr.open('GET', url, true);
+    xhr.onload = function () {
+        callback(JSON.parse(this.responseText));
+    };
     xhr.setRequestHeader("Content-type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
     xhr.send();
-}
-
-function request(method, url, callback) {
-    var xhr = new XMLHttpRequest();
-
-    xhr.open(method, url, true);
-    xhr.onload = function () {
-        callback(this.responseText);
-    };
-    xhr.setRequestHeader("X-HTTP-Method-Override", method);
-    xhr.send();
-}
-
-function requestData(method, url, callback) {
-    request(method, url, function (responseText) {
-        var data = JSON.parse(responseText);
-        callback(data);
-    });
 }
 
 //XXX: TODO Make this prettier!
@@ -61,7 +51,7 @@ function drawCircle(context,entity) {
         lineWidth = 3;
         var x = entity["x"];
         var y = entity["y"];
-        //moveTo(x,y);
+        moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
         arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
@@ -131,11 +121,11 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
-    drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-    sendJSONXMLHTTPRequest(url, world, function (error, data) {
+    var url = host + '/entity/' + entity;
+    postJSON(url, data, function (error, res) {
         if (error) { return console.log(error); }
-        console.log(data);
+        drawNextFrame();
     });
 }
 
@@ -258,11 +248,19 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    drawFrame();
+    var url = host + '/world'
+    requestJSON(url, function (data) {
+        world = data;
+        renderFrame();
+    });
 }
 
 // 30 frames per second
 setInterval( update, 1000/30.0);
+
+})();
+
+
 
 
 

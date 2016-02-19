@@ -65,7 +65,7 @@ def flask_post_json():
     '''Ah the joys of frameworks! They do so much work for you
        that they get in the way of sane operation!'''
     if (request.json != None):
-        return request.json
+        return request.get_json()
     elif (request.data != None and request.data != ''):
         return json.loads(request.data)
     else:
@@ -76,29 +76,29 @@ def flask_post_json():
 def hello():
     return redirect('/static/index.html')
 
-@app.route("/entity/<entity>", methods=['POST','PUT'])
-def update(entity):
-    if request.method == 'POST':
-        return myWorld.set(entity, flask_post_json())
-    else:
-        return get_entity(entity)
 
-@app.route("/world", methods=['POST','GET'])    
-def world():
-    if request.method == 'GET':
-        return json.dumps(myWorld.world())
-    else:
-        return None
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     return json.dumps(myWorld.get(entity))
 
+
+@app.route("/entity/<entity>", methods=['POST','PUT'])
+def update(entity):
+    myWorld.set(entity, flask_post_json())
+    return json.dumps(myWorld.world())
+
+
+@app.route("/world", methods=['POST','GET'])    
+def world():
+    return json.dumps(myWorld.world())
+
+
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
     myWorld.clear()
-    return  json.dumps(None)
+    return json.dumps(None)
 
 if __name__ == "__main__":
     app.run()
