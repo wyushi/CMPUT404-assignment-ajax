@@ -1,14 +1,13 @@
 (function () {
 
 var canvas = document.getElementById('c'),
-    host = window.location.host,
+    host = "http://" + window.location.host,
     context = canvas.getContext("2d"),
     W = canvas.width  = window.innerWidth-6,
     H = canvas.height = window.innerHeight-50,
     world = {},
     drawNext = true,
-    counter = 0,
-    host = "http://localhost:5000";
+    counter = 0;
 
 
 function postJSON(url, objects, callback) {
@@ -44,19 +43,18 @@ function requestJSON(url, callback) {
     xhr.send();
 }
 
-//XXX: TODO Make this prettier!
-function drawCircle(context,entity) {
-    with(context) {
-        beginPath();              
-        lineWidth = 3;
-        var x = entity["x"];
-        var y = entity["y"];
-        moveTo(x,y);
-        fillStyle = entity["colour"];
-        strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
-    }
+function drawCircle(context, entity) {
+    var x = entity["x"],
+        y = entity["y"],
+        r = entity["radius"];
+
+    context.lineWidth = 3;
+    context.fillStyle = entity["colour"];
+    context.strokeStyle = context.fillStyle;
+
+    context.beginPath();
+    context.arc(x, y, (r)?r:50, 0, 2.0 * Math.PI, false);
+    context.stroke();
 }
 
 function prepEntity(entity) {
@@ -70,11 +68,9 @@ function prepEntity(entity) {
 }
 
 function clearFrame() {
-    with(context) {
-    moveTo(0,0);
-    fillStyle = "#000";
-    fillRect(0,0,W,H);
-    }
+    context.moveTo(0,0);
+    context.fillStyle = "#000";
+    context.fillRect(0,0,W,H);
 }
 
 // This actually draws the frame
@@ -121,7 +117,6 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
-    //XXX: Send a XHTML Request that updates the entity you just  modified!
     var url = host + '/entity/' + entity;
     postJSON(url, data, function (error, res) {
         if (error) { return console.log(error); }
@@ -206,7 +201,7 @@ mouse = (function() {
                 var y = pos[1];
             if (self.clicked != 0) {
                 //self.squeakin(x,y);
-                    self.callListeners(self.mousedraggers,x,y,self.clicked,e);
+                self.callListeners(self.mousedraggers,x,y,self.clicked,e);
             }
                 self.callListeners(self.mousemovers,x,y,self.clicked,e);
             }            
@@ -232,22 +227,35 @@ mouse = (function() {
 })();
 
 // Add the application specific mouse listeners!
-//XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    var entity = {
+        'x': x,
+        'y': y,
+        'colour': 'blue'
+    };
+    addEntityWithoutName(entity);
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    var entity = {
+        'x': x,
+        'y': y,
+        'colour': 'red'
+    };
+    addEntityWithoutName(entity);
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    var entity = {
+        'x': x,
+        'y': y,
+        'colour': 'green',
+        'radius': 10
+    };
+    addEntityWithoutName(entity);
 });
 
 function update() {
-    //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
     var url = host + '/world'
     requestJSON(url, function (data) {
         world = data;
