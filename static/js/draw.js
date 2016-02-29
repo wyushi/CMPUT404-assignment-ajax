@@ -1,6 +1,7 @@
 (function () {
 
 var canvas = document.getElementById('c'),
+    star = document.getElementById('star'),
     host = "http://" + window.location.host,
     context = canvas.getContext("2d"),
     W = canvas.width  = window.innerWidth-6,
@@ -43,17 +44,23 @@ function requestJSON(url, callback) {
     xhr.send();
 }
 
-function drawCircle(context, entity) {
+function draw(context, entity) {
     var x = entity["x"],
         y = entity["y"],
-        r = entity["radius"];
+        r = entity["radius"]
+        isStar = entity["starImage"];
 
     context.lineWidth = 3;
     context.fillStyle = entity["colour"];
     context.strokeStyle = context.fillStyle;
 
     context.beginPath();
-    context.arc(x, y, (r)?r:50, 0, 2.0 * Math.PI, false);
+    if (isStar) {
+        context.drawImage(star, x - r/2, y - r/2, r, r);
+    } else {
+        context.arc(x, y, (r)?r:50, 0, 10.0 * Math.PI, false);
+    }
+
     context.stroke();
 }
 
@@ -78,7 +85,7 @@ function renderFrame() {
     clearFrame();
     for (var key in world) {
         var entity = world[key];
-        drawCircle(context,prepEntity(entity));
+        draw(context, prepEntity(entity));
     }
 }
 
@@ -231,7 +238,7 @@ mouse.mousedowners.push(function(x,y,clicked,e) {
     var entity = {
         'x': x,
         'y': y,
-        'colour': 'blue'
+        'colour': 'white'
     };
     addEntityWithoutName(entity);
 });
@@ -240,7 +247,7 @@ mouse.mouseuppers.push(function(x,y,clicked,e) {
     var entity = {
         'x': x,
         'y': y,
-        'colour': 'red'
+        'colour': 'yellow'
     };
     addEntityWithoutName(entity);
 });
@@ -250,7 +257,8 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
         'x': x,
         'y': y,
         'colour': 'green',
-        'radius': 10
+        'radius': 50,
+        'starImage': true
     };
     addEntityWithoutName(entity);
 });
